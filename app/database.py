@@ -1,28 +1,43 @@
-# Fichier: app/database.py
-
 import sqlite3
 import os
+from app.security import get_password_hash
 
-# Nom du fichier de la base de données SQLite. Il sera créé à la racine du projet.
-DB_FILE = "metrics.db"
-
+APP_DB_FILE = "api_data.db"
+METRICS_DB_FILE = "metrics.db"
+# --- Initialisation des Bases de Données ---
+# Cette fonction est appelée au démarrage de l'application pour créer les tables nécessaires.
 def init_db():
-    """
-    Initialise la connexion à la base de données et s'assure que la table
-    pour enregistrer les exécutions de playbook existe.
-    Cette fonction est conçue pour être appelée au démarrage de l'application.
-    """
-    print("INFO: Initialisation de la base de données de métriques...")
-    # Crée une connexion au fichier de la base de données.
-    conn = sqlite3.connect(DB_FILE)
-    # Crée un curseur pour exécuter des commandes SQL.
-    cursor = conn.cursor()
-
-    # CORRECTION : Utilise "CREATE TABLE IF NOT EXISTS".
-    # Cette commande est sûre : elle ne fera rien si la table existe déjà,
-    # mais la créera si le fichier de base de données est neuf ou vide.
-    # C'est la méthode standard pour initialiser des schémas de base de données.
-    cursor.execute('''
+    print("INFO: Initialisation des bases de données...")
+    conn_app = sqlite3.connect(APP_DB_FILE)
+    cursor_app = conn_app.cursor()
+    cursor_app.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            role TEXT DEFAULT 'user' NOT NULL
+        )
+    ''')
+    cursor_app.execute("SELECT COUNT(*) FROM users")
+    if cursor_app.fetchone()[0] == 0:
+        print("INFO: Création des utilisateurs par défaut...")
+        admin_password = "adminpassword"
+        admin_hashed_password = get_password_hash(admin_password)
+        cursor_app.execute(
+            "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
+            ('admin', admin_hashed_password, 'admin')
+        )
+        user_password = "userpassword"
+        user_hashed_password = get_password_hash(user_password)
+        cursor_app.execute(
+            "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
+            ('user', user_hashed_password, 'user')
+        )
+    conn_app.commit()
+    conn_app.close()
+    conn_metrics = sqlite3.connect(METRICS_DB_FILE)
+    cursor_metrics = conn_metrics.cursor()
+    cursor_metrics.execute('''
         CREATE TABLE IF NOT EXISTS playbook_runs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -32,22 +47,21 @@ def init_db():
             duration REAL NOT NULL
         )
     ''')
-    
-    # Valide la transaction et enregistre les changements.
-    conn.commit()
-    # Ferme la connexion à la base de données.
-    conn.close()
-    print("INFO: Base de données prête.")
+    conn_metrics.commit()
+    conn_metrics.close()
+    print("INFO: Bases de données prêtes.")
 
+def get_user_by_username(username: str):
+    conn = sqlite3.connect(APP_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    user = cursor.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+    return user
 
 def log_playbook_run(service: str, action: str, status: str, duration: float):
-    """
-    Enregistre une nouvelle exécution de playbook dans la base de données.
-    Cette fonction est appelée à la fin de chaque exécution dans services.py.
-    """
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(METRICS_DB_FILE)
     cursor = conn.cursor()
-    # Utilise des paramètres (?) pour insérer les données de manière sécurisée et éviter les injections SQL.
     cursor.execute(
         "INSERT INTO playbook_runs (service, action, status, duration) VALUES (?, ?, ?, ?)",
         (service, action, status, duration)
@@ -55,31 +69,17 @@ def log_playbook_run(service: str, action: str, status: str, duration: float):
     conn.commit()
     conn.close()
 
-
 def get_dashboard_stats():
-    """
-    Interroge la base de données pour agréger et retourner les statistiques
-    qui seront affichées sur le tableau de bord.
-    """
-    conn = sqlite3.connect(DB_FILE)
-    # Permet d'accéder aux résultats de la requête par nom de colonne (ex: r['status']).
+    conn = sqlite3.connect(METRICS_DB_FILE)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
-    # Requête pour compter le nombre total d'exécutions par statut ('success' ou 'failure').
     runs = cursor.execute("SELECT status, COUNT(*) as count FROM playbook_runs GROUP BY status").fetchall()
-    
-    # Requête pour calculer la durée moyenne de chaque type d'action.
     avg_duration = cursor.execute("SELECT action, AVG(duration) as avg_d FROM playbook_runs GROUP BY action").fetchall()
-    
     conn.close()
-    
-    # Met en forme les données dans un dictionnaire facile à utiliser pour l'API et le frontend.
     stats = {
         "success": next((r['count'] for r in runs if r['status'] == 'success'), 0),
         "failure": next((r['count'] for r in runs if r['status'] == 'failure'), 0),
-        "avg_duration": {r['action']: round(r['avg_d'], 3) for r in avg_duration} # Arrondit à 3 décimales
+        "avg_duration": {r['action']: round(r['avg_d'], 3) for r in avg_duration}
     }
     stats["total"] = stats["success"] + stats["failure"]
-    
     return stats

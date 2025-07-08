@@ -12,6 +12,7 @@ from app.routes.webserver import router as webserver_router
 from app.routes.streaming import router as streaming_router
 from app.routes.actions import router as actions_router
 from app.routes.dashboard import router as dashboard_router
+from app.routes.auth import router as auth_router
 
 # Crée l'instance de l'application FastAPI. On retire le paramètre 'lifespan'.
 app = FastAPI(
@@ -38,6 +39,7 @@ app.add_middleware(
 )
 
 # Inclusion des différents routeurs.
+app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(webserver_router)
 app.include_router(streaming_router)
