@@ -1,7 +1,11 @@
 from fastapi import APIRouter
 
+# Crée une instance de routeur avec un préfixe commun pour toutes les routes de ce fichier.
 router = APIRouter(prefix="/api", tags=["Actions"])
 
+# Ce dictionnaire sert de catalogue central pour toutes les actions possibles.
+# C'est la "source de vérité" que l'interface web (test_websocket.html) utilise pour se construire.
+# Pour ajouter une nouvelle fonctionnalité à l'interface, il suffit de la décrire ici.
 AVAILABLE_ACTIONS = {
     "user": [
         {
@@ -36,7 +40,7 @@ AVAILABLE_ACTIONS = {
             "description": "Créer un nouveau site web Nginx",
             "required_fields": [
                 {"name": "server_name", "type": "text"},
-                {"name": "root_dir", "type": "text"},
+                {"name": "root_dir(/var/www/\"nom_du_site\")", "type": "text"},
                 {"name": "port", "type": "number", "default": 80}
             ]
         },
@@ -53,5 +57,6 @@ AVAILABLE_ACTIONS = {
 
 @router.get("/actions", summary="Lister toutes les actions de playbook disponibles")
 async def get_available_actions():
-    """Retourne une liste structurée des services et actions possibles."""
+    """Retourne la liste structurée des services et actions possibles."""
+    # Cet endpoint retourne simplement le dictionnaire ci-dessus au format JSON.
     return AVAILABLE_ACTIONS

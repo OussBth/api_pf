@@ -1,15 +1,20 @@
 ---
-- hosts: local_managed
-  become: true
-  gather_facts: false
+- hosts: local_managed # Cible les machines définies dans le groupe [local_managed] de l'inventaire.
+  become: true         # Exécute les tâches avec des privilèges élevés (sudo).
+  gather_facts: false  # On désactive la collecte des "facts" Ansible pour accélérer l'exécution.
+  
+  # Fichier contenant les variables chiffrées (mots de passe, etc.).
   vars_files:
     - vault/credentials.yml
+
+  # Variables passées depuis l'API via --extra-vars.
   vars:
     service: "{{ service }}"
     user_action: "{{ user_action }}"
     payload: "{{ payload }}"
 
   roles:
+    # Condition pour n'exécuter que le rôle demandé par l'API.
     - role: nginx_vhost
       when: service == 'webserver'
     - role: linux_user
