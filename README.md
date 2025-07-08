@@ -39,7 +39,7 @@ Le projet inclut également une interface de streaming en temps réel via WebSoc
 
 1.  **Cloner le dépôt**
     ```bash
-    git clone [https://github.com/OussBth/api_pf.git](https://github.com/OussBth/api_pf.git)
+    git clone https://github.com/OussBth/api_pf.git
     cd api_pf
     ```
 
