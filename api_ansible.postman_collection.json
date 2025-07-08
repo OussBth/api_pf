@@ -1,0 +1,424 @@
+{
+	"info": {
+		"_postman_id": "f4058102-62ac-4457-b5f8-4adc5c8c7d85",
+		"name": "API PROJECT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26164823"
+	},
+	"item": [
+		{
+			"name": "Linux user",
+			"item": [
+				{
+					"name": "list users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user/groups",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user",
+								"groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list user groups",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user/groups?username=testuser22363",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user",
+								"groups"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "testuser22363"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"create\",\r\n    \"username\": \"testuser22363\",\r\n    \"password\": \"Password123!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"create_group\",\r\n    \"group\": \"malipuissanci223\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user/group/create",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user",
+								"group",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add user into group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"add_group\",\r\n    \"username\": \"testuser22363\",\r\n    \"group\": \"malipuissanci223\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user/group",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user",
+								"group"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change user password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"password\",\r\n    \"username\": \"testuser22363\",\r\n    \"password\": \"newpwd23\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"delete\",\r\n    \"username\": \"testuser22363\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove user from group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"del_group\",\r\n    \"username\": \"testuser223\",\r\n    \"group\": \"malipuissanci\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/user/group",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"user",
+								"group"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Web server",
+			"item": [
+				{
+					"name": "Create a new website",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"create\",\r\n    \"server_name\": \"{{site_name}}\",\r\n    \"root_dir\": \"/var/www/{{site_name}}\",\r\n    \"port\": {{port_site}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/webserver",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"webserver"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enable / Disable a website",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"enable\",\r\n    \"server_name\": \"{{site_name}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/webserver/{{site_name}}/status",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"webserver",
+								"{{site_name}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List all websites",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/webserver",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"webserver"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a website",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"action\": \"create\",\r\n    \"server_name\": \"{{site_name}}\",\r\n    \"root_dir\": \"/var/www/{{site_name}}\",\r\n    \"port\": 8080\r\n}"
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_api}}/api/webserver/{{site_name}}",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_api}}",
+							"path": [
+								"api",
+								"webserver",
+								"{{site_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TEST-Access the website",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Host",
+								"value": "{{site_name}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://{{server_ip}}:{{port_site}}",
+							"protocol": "http",
+							"host": [
+								"{{server_ip}}"
+							],
+							"port": "{{port_site}}"
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

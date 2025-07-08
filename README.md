@@ -105,6 +105,22 @@ Utilisez un client comme Postman ou `curl` pour interagir avec l'API.
 
 Ouvrez le fichier `test_websocket.html` dans un navigateur pour accéder à l'interface de contrôle dynamique.
 
+## Utilisation avec Postman
+
+Ce dépôt inclut une collection et un environnement Postman pour tester l'API facilement.
+
+1.  **Importer les fichiers :**
+    * Dans Postman, cliquez sur le bouton "Import".
+    * Glissez-déposez les deux fichiers : `api_ansible.postman_collection.json` et `api_ansible.postman_environment.json`.
+
+2.  **Configurer l'environnement :**
+    * Allez dans l'onglet "Environments", sélectionnez "API Linux - Local".
+    * Remplissez les valeurs pour les variables comme `server_ip`.
+
+3.  **Utiliser l'API :**
+    * Assurez-vous que l'environnement "API Linux - Local" est bien sélectionné en haut à droite de Postman.
+    * Vous pouvez maintenant utiliser les requêtes pré-configurées dans la collection "API PROJECT".
+
 ## Auteur
 
 * **OussBth** - [Profil GitHub](https://github.com/OussBth)
