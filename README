@@ -4,6 +4,7 @@ Ce projet est une API RESTful construite avec FastAPI qui sert d'interface pour 
 
 Le projet inclut également une interface de streaming en temps réel via WebSockets pour suivre l'exécution des playbooks.
 
+
 ## Fonctionnalités
 
 * **Gestion des Utilisateurs Linux** :
