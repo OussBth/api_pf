@@ -1,0 +1,16 @@
+---
+- hosts: local_managed
+  become: true
+  gather_facts: false
+  vars_files:
+    - vault/credentials.yml
+  vars:
+    service: "{{ service }}"
+    user_action: "{{ user_action }}"
+    payload: "{{ payload }}"
+
+  roles:
+    - role: nginx_vhost
+      when: service == 'webserver'
+    - role: linux_user
+      when: service == 'user'

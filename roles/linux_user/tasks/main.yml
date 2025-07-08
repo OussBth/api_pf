@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: MIT-0
+---
+# Fichier de tâches pour le rôle linux_user
+
+- name: Créer un utilisateur
+  ansible.builtin.user:
+    name: "{{ payload.username }}"
+    password: "{{ payload.password }}"
+    shell: "{{ user_shell }}"
+    state: present
+  when:
+    - user_action == 'create'
+
+- name: créer un groupe
+  ansible.builtin.group:
+    name: "{{ payload.group }}"
+    state: present
+  when:
+    - user_action == 'create_group'
+
+- name: Supprimer un utilisateur
+  ansible.builtin.user:
+    name: "{{ payload.username }}"
+    state: absent
+    remove: yes
+  when:
+    - user_action == 'delete'
+
+- name: Changer le mot de passe d'un utilisateur
+  ansible.builtin.user:
+    name: "{{ payload.username }}"
+    password: "{{ payload.password }}"
+  when:
+    - user_action == 'password'
+
+- name: Ajouter un utilisateur à un groupe
+  ansible.builtin.user:
+    name: "{{ payload.username }}"
+    groups: "{{ payload.group }}"
+    append: yes
+  when:
+    - user_action == 'add_group'
+
+- name: Retirer un utilisateur d'un groupe
+  ansible.builtin.user:
+    name: "{{ payload.username }}"
+    groups: "{{ payload.group }}"
+    append: no
+  when:
+    - user_action == 'del_group'
+
+- name: Lister tous les utilisateurs
+  ansible.builtin.getent:
+    database: passwd
+  register: users_list
+  when:
+    - user_action == 'list_users'
+
+- name: Afficher la liste des utilisateurs
+  ansible.builtin.debug:
+    msg: "Utilisateurs : {{ users_list.ansible_facts.getent_passwd.keys() | list }}"
+  when:
+    - user_action == 'list_users'
+
+- name: Lister tous les groupes du système
+  ansible.builtin.getent:
+    database: group
+  register: all_groups
+  when:
+    - user_action == 'list_groups'
+    - payload.username is not defined
+
+- name: Lister les groupes d'un utilisateur spécifique
+  ansible.builtin.command:
+    cmd: "id -nG {{ payload.username }}"
+  register: user_groups
+  changed_when: false 
+  when:
+    - user_action == 'list_groups'
+    - payload.username is defined
+
+- name: Afficher la liste des groupes
+  ansible.builtin.debug:
+    msg: |
+      {% if payload.username is defined %}
+      {# La sortie de "id -nG" est une chaîne de caractères, on la transforme en liste #}
+      Groupes de {{ payload.username }}: {{ user_groups.stdout.split(' ') }}
+      {% else %}
+      Tous les groupes: {{ all_groups.ansible_facts.getent_group.keys() | list }}
+      {% endif %}
+  when:
+    - user_action == 'list_groups'

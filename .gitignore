@@ -1,0 +1,14 @@
+# Environnement virtuel
+venv/
+
+# Fichiers cache Python
+__pycache__/
+*.pyc
+
+# Fichiers secrets
+.vault_pass.txt
+vault/credentials.yml
+
+# Fichiers de configuration IDE
+.vscode/
+.idea/

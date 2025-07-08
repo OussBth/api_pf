@@ -1,0 +1,12 @@
+server {
+    listen {{ payload.port }};
+    listen [::]:{{ payload.port }};
+
+    server_name {{ payload.server_name }};
+    root {{ payload.root_dir }};
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

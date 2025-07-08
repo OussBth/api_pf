@@ -1,0 +1,105 @@
+# roles/nginx_vhost/tasks/main.yml
+
+- name: "Installer Nginx"
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+# --- ACTIONS D'ÉCRITURE (CREATE, UPDATE, DELETE) ---
+
+- name: "S'assurer que le dossier racine du site existe"
+  ansible.builtin.file:
+    path: "{{ payload.root_dir }}"
+    state: directory
+    mode: '0755'
+  when: user_action == 'create'
+
+- name: "Créer une page index.html de test"
+  ansible.builtin.copy:
+    content: "<h1>Bienvenue sur {{ payload.server_name }}</h1><p>Site géré par l'API Ansible.</p>"
+    dest: "{{ payload.root_dir }}/index.html"
+  when: user_action == 'create'
+
+- name: "Créer ou Mettre à jour le fichier de configuration"
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "/etc/nginx/sites-available/{{ payload.server_name }}.conf"
+  when: user_action == 'create' or user_action == 'update'
+  notify: Reload Nginx
+
+- name: "Activer le site"
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ payload.server_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ payload.server_name }}.conf"
+    state: link
+  when: user_action == 'create' or user_action == 'enable'
+  notify: Reload Nginx
+
+- name: "Désactiver le site"
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ payload.server_name }}.conf"
+    state: absent
+  when: user_action == 'disable' or user_action == 'delete'
+  notify: Reload Nginx
+
+- name: "Supprimer le fichier de configuration"
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-available/{{ payload.server_name }}.conf"
+    state: absent
+  when: user_action == 'delete'
+
+# --- ACTIONS DE LECTURE (LIST, STATUS, CONFIG, LOGS) ---
+
+- name: "Lister les sites configurés"
+  ansible.builtin.find:
+    paths: "/etc/nginx/sites-available"
+    file_type: file
+  register: found_sites
+  when: user_action == 'list'
+
+- name: "Afficher la liste des sites"
+  ansible.builtin.debug:
+    msg: "{{ {'websites': found_sites.files | map(attribute='path') | map('basename') | list} | to_json }}"
+  when: user_action == 'list'
+
+- name: "Vérifier le statut d'activation du site"
+  ansible.builtin.stat:
+    path: "/etc/nginx/sites-enabled/{{ payload.server_name }}.conf"
+  register: site_status
+  when: user_action == 'status'
+
+- name: "Afficher le statut du site"
+  ansible.builtin.debug:
+    msg: "{{ {'status': 'enabled' if site_status.stat.exists else 'disabled'} | to_json }}"
+  when: user_action == 'status'
+
+- name: "Lire le fichier de configuration"
+  ansible.builtin.slurp:
+    src: "/etc/nginx/sites-available/{{ payload.server_name }}.conf"
+  register: config_file
+  when: user_action == 'config'
+
+- name: "Afficher la configuration"
+  ansible.builtin.debug:
+    msg: "{{ {'config': config_file.content | b64decode} | to_json }}"
+  when: user_action == 'config'
+
+- name: "Lire les logs d'accès du site"
+  ansible.builtin.command: "tail -n 50 /var/log/nginx/access.log" # Simplifié pour l'exemple
+  register: access_logs
+  changed_when: false
+  ignore_errors: true
+  when: user_action == 'logs'
+
+- name: "Lire les logs d'erreur du site"
+  ansible.builtin.command: "tail -n 50 /var/log/nginx/error.log" # Simplifié pour l'exemple
+  register: error_logs
+  changed_when: false
+  ignore_errors: true
+  when: user_action == 'logs'
+
+- name: "Afficher les logs"
+  ansible.builtin.debug:
+    msg: "{{ {'logs': {'access': access_logs.stdout_lines, 'error': error_logs.stdout_lines}} | to_json }}"
+  when: user_action == 'logs'
