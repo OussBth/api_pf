@@ -1,43 +1,17 @@
 import sqlite3
 import os
-from app.security import get_password_hash
 
-APP_DB_FILE = "api_data.db"
 METRICS_DB_FILE = "metrics.db"
-# --- Initialisation des Bases de Données ---
-# Cette fonction est appelée au démarrage de l'application pour créer les tables nécessaires.
+
 def init_db():
-    print("INFO: Initialisation des bases de données...")
-    conn_app = sqlite3.connect(APP_DB_FILE)
-    cursor_app = conn_app.cursor()
-    cursor_app.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            hashed_password TEXT NOT NULL,
-            role TEXT DEFAULT 'user' NOT NULL
-        )
-    ''')
-    cursor_app.execute("SELECT COUNT(*) FROM users")
-    if cursor_app.fetchone()[0] == 0:
-        print("INFO: Création des utilisateurs par défaut...")
-        admin_password = "adminpassword"
-        admin_hashed_password = get_password_hash(admin_password)
-        cursor_app.execute(
-            "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
-            ('admin', admin_hashed_password, 'admin')
-        )
-        user_password = "userpassword"
-        user_hashed_password = get_password_hash(user_password)
-        cursor_app.execute(
-            "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
-            ('user', user_hashed_password, 'user')
-        )
-    conn_app.commit()
-    conn_app.close()
-    conn_metrics = sqlite3.connect(METRICS_DB_FILE)
-    cursor_metrics = conn_metrics.cursor()
-    cursor_metrics.execute('''
+    """
+    Initialise la base de données des métriques et crée la table 'playbook_runs'.
+    """
+    print("INFO: Initialisation de la base de données de métriques...")
+    conn = sqlite3.connect(METRICS_DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS playbook_runs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -47,19 +21,15 @@ def init_db():
             duration REAL NOT NULL
         )
     ''')
-    conn_metrics.commit()
-    conn_metrics.close()
-    print("INFO: Bases de données prêtes.")
-
-def get_user_by_username(username: str):
-    conn = sqlite3.connect(APP_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    user = cursor.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.commit()
     conn.close()
-    return user
+    print("INFO: Base de données des métriques prête.")
+
 
 def log_playbook_run(service: str, action: str, status: str, duration: float):
+    """
+    Enregistre une exécution de playbook dans la base de données des métriques.
+    """
     conn = sqlite3.connect(METRICS_DB_FILE)
     cursor = conn.cursor()
     cursor.execute(
@@ -70,6 +40,9 @@ def log_playbook_run(service: str, action: str, status: str, duration: float):
     conn.close()
 
 def get_dashboard_stats():
+    """
+    Récupère les statistiques depuis la base de données des métriques pour le dashboard.
+    """
     conn = sqlite3.connect(METRICS_DB_FILE)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()

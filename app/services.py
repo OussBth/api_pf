@@ -18,11 +18,14 @@ ENV['ANSIBLE_STDOUT_CALLBACK'] = 'json'
 
 def summarize(ansible_json: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Analyse la sortie JSON d'Ansible pour en extraire les informations utiles.
+    Analyse la sortie JSON d'Ansible de manière cohérente.
+    1. Cherche les erreurs en premier.
+    2. Si pas d'erreur, cherche un message à afficher et place TOUJOURS
+       le résultat final dans une clé nommée 'results'.
     """
     stats = ansible_json.get('stats', {})
-    
-    # Cherche la première tâche qui a échoué.
+
+    # Étape 1 : Recherche d'erreurs
     for play in ansible_json.get('plays', []):
         for task in play.get('tasks', []):
             name = task['task'].get('name', 'Tâche inconnue')
@@ -34,18 +37,33 @@ def summarize(ansible_json: Dict[str, Any]) -> Dict[str, Any]:
                         'reason': res.get('msg', 'Aucun message d\'erreur détaillé trouvé.')
                     }
 
-    # Si pas d'erreur, cherche le résultat d'une tâche "Afficher...".
+    # Étape 2 : Recherche de résultats de succès
     for play in ansible_json.get('plays', []):
         for task in play.get('tasks', []):
             name = task['task'].get('name', '')
             for host, res in task['hosts'].items():
                 if res.get('msg') and 'afficher' in name.lower():
+                    # --- CORRECTION DE LA LOGIQUE ---
+                    # On essaie de parser la sortie, peu importe son format,
+                    # et on place le résultat final dans la clé 'results'.
                     try:
+                        # Cas 1: Le message est déjà du JSON (ex: pour lister les sites)
+                        # Le msg est: "{'websites': ['a', 'b']}"
                         parsed_data = json.loads(res['msg'])
-                        parsed_data.update({'stats': stats})
-                        return parsed_data
-                    except (json.JSONDecodeError, AttributeError):
-                        return {'stats': stats, 'raw_result': res['msg']}
+                        # On extrait la valeur (ex: la liste ['a', 'b'])
+                        final_result = list(parsed_data.values())[0]
+                        return {'stats': stats, 'results': final_result}
+                    except (json.JSONDecodeError, AttributeError, IndexError):
+                        # Cas 2: Le message est une chaîne (ex: "Groupes: ['a', 'b']")
+                        try:
+                            list_str = res['msg'].split(':', 1)[1].strip()
+                            final_result = ast.literal_eval(list_str)
+                            return {'stats': stats, 'results': final_result}
+                        except: # En dernier recours
+                            return {'stats': stats, 'results': res['msg']}
+
+    # Si aucune erreur et aucune tâche d'affichage
+    return {'stats': stats, 'results': []}
 
     return {'stats': stats, 'results': "Exécution terminée avec succès sans sortie à afficher."}
 
