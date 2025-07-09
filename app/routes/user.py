@@ -1,17 +1,9 @@
-# On importe les classes et fonctions de base de FastAPI.
-# 'Depends' n'est plus nécessaire ici.
+# On importe les classes de base de FastAPI.
 from fastapi import APIRouter, HTTPException, Query
-
-# Importe le modèle Pydantic pour la validation des données.
+# On importe le modèle Pydantic pour la validation des données.
 from app.models.user import UserRequest
-# Importe la fonction principale qui exécute les playbooks.
+# On importe la fonction principale qui exécute les playbooks.
 from app.services import run_playbook
-
-# Importations nécessaires pour l'interaction avec la base de données.
-import sqlite3
-from app.database import APP_DB_FILE, get_user_by_username
-# On importe get_password_hash car Ansible attend un mot de passe haché.
-from app.security import get_password_hash
 
 # Le préfixe /api/user sera ajouté à toutes les URL de ce routeur.
 router = APIRouter(prefix="/api/user", tags=["user"])
@@ -19,12 +11,7 @@ router = APIRouter(prefix="/api/user", tags=["user"])
 
 @router.get("", summary="Lister tous les utilisateurs")
 async def list_users(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
-    """
-    Retourne une liste paginée de tous les utilisateurs du système.
-    Cette route est ouverte et ne nécessite aucune authentification.
-    """
     result = run_playbook("user", "list_users", {})
-    
     if result.get('return_code') != 0:
         raise HTTPException(status_code=500, detail={"status": "error", "data": result})
     
@@ -40,10 +27,6 @@ async def list_groups(
     skip: int = Query(0, ge=0),
     limit: int = Query(60, ge=1, le=200)
 ):
-    """
-    Retourne une liste paginée de groupes.
-    Cette route est ouverte.
-    """
     payload = {"username": username} if username else {}
     result = run_playbook("user", "list_groups", payload)
     
@@ -58,60 +41,33 @@ async def list_groups(
 
 @router.post("", summary="Créer un nouvel utilisateur")
 async def create_user(req: UserRequest):
-    """
-    Crée un utilisateur sur le système Linux et l'enregistre dans la base de données de l'API.
-    """
     if req.action != 'create' or not req.username or not req.password:
         raise HTTPException(400, detail={"status": "fail", "message": "Action 'create' et champs 'username'/'password' requis."})
-
-    if get_user_by_username(req.username):
-        raise HTTPException(status_code=400, detail={"status": "fail", "message": "Ce nom d'utilisateur existe déjà."})
-
-    hashed_password = get_password_hash(req.password)
-    payload_for_ansible = {"username": req.username, "password": hashed_password}
-    result = run_playbook("user", req.action, payload_for_ansible)
+    
+    # On exécute directement le playbook, sans interaction avec la DB.
+    result = run_playbook("user", req.action, req.dict())
     
     if result.get('return_code') != 0:
         raise HTTPException(500, detail={"status": "error", "data": result})
-
-    conn = sqlite3.connect(APP_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)", (req.username, hashed_password, 'user'))
-    conn.commit()
-    conn.close()
     
     return {"status": "success", "data": {"message": f"Utilisateur '{req.username}' créé avec succès."}}
 
 
 @router.put("", summary="Changer le mot de passe d'un utilisateur")
 async def change_password(req: UserRequest):
-    """
-    Change le mot de passe d'un utilisateur sur le système et dans la base de données de l'API.
-    """
     if req.action != 'password' or not req.username or not req.password:
         raise HTTPException(400, detail={"status": "fail", "message": "Action 'password' et champs 'username'/'password' requis."})
     
-    hashed_password = get_password_hash(req.password)
-    payload_for_ansible = {"username": req.username, "password": hashed_password}
-    result = run_playbook("user", req.action, payload_for_ansible)
+    result = run_playbook("user", req.action, req.dict())
     
     if result.get('return_code') != 0:
         raise HTTPException(500, detail={"status": "error", "data": result})
-    
-    conn = sqlite3.connect(APP_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET hashed_password = ? WHERE username = ?", (hashed_password, req.username))
-    conn.commit()
-    conn.close()
     
     return {"status": "success", "data": {"message": f"Mot de passe de l'utilisateur '{req.username}' changé avec succès."}}
 
 
 @router.delete("", summary="Supprimer un utilisateur")
 async def delete_user(req: UserRequest):
-    """
-    Supprime un utilisateur du système et de la base de données de l'API.
-    """
     if req.action != 'delete' or not req.username:
         raise HTTPException(400, detail={"status": "fail", "message": "Action 'delete' et champ 'username' requis."})
     
@@ -119,12 +75,6 @@ async def delete_user(req: UserRequest):
     
     if result.get('return_code') != 0:
         raise HTTPException(500, detail={"status": "error", "data": result})
-    
-    conn = sqlite3.connect(APP_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE username = ?", (req.username,))
-    conn.commit()
-    conn.close()
     
     return {"status": "success", "data": {"message": f"Utilisateur '{req.username}' supprimé avec succès."}}
 
