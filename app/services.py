@@ -7,6 +7,7 @@ from typing import Any, Dict
 # On garde la fonction de log pour le dashboard
 from app.database import log_playbook_run
 
+
 # --- Configuration Globale Ansible ---
 ANSIBLE_PLAYBOOK_PATH = '/home/deb/API/FPJ/venv/bin/ansible-playbook'
 INVENTORY  = 'inventory/hosts.ini'
